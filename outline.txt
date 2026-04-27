@@ -73,7 +73,7 @@ Outline:
 
                 My improvement directly addresses this weakness.
 
-            Paper 2: Izacard & Grave (2021) — FiD (Fusion-in-Decoder)                            <-- use this
+            Paper 2: Izacard & Grave (2021) — FiD (Fusion-in-Decoder)                           <-- use this
 
         Best 3 papers to cite:
             Carbonell & Goldstein (1998) → MMR (core idea)
