@@ -1,0 +1,22 @@
+## ToDo ##
+    1. find/select improvement
+    2. implement improvement
+    3. test code and produce results
+    4. complete project outline
+    5. create presentation
+    6. write report
+
+Weakness: TS-RAG retrieves by embedding similarity only
+    TS-RAG retrieves the top-k similar time-series segments from a knowledge database, then uses ARM to fuse retrieved patterns with the forecast model. The paper says this improves zero-shot forecasting and interpretability, but the repo’s retriever uses FAISS IndexFlatL2, meaning retrieval is mainly Euclidean-distance nearest-neighbor search in embedding space.
+
+Proposed improvement: Diversity-Aware Retrieval
+    Instead of taking the top-k closest retrieved examples, add a second step that removes near-duplicate retrieved segments. This fixes a weakness where the top-k results may all represent almost the same pattern, giving the model less useful context.
+
+This relates well to class topics:
+    1. Informed Search - Retrieval is a search problem guided by similarity distance.
+    2. Unsupervised Learning / Clustering - Cluster retrieved candidates and choose diverse representatives.
+    3. Feature Selection - Select the most useful retrieved examples instead of blindly using all top-k.
+    4. Local Search - Improve the selected retrieval set after initial nearest-neighbor search.
+
+Outline:
+    My proposed improvement is to make TS-RAG’s retrieval step diversity-aware. The original method retrieves the nearest time-series segments using embedding similarity, but this can return many redundant segments that represent the same pattern. I would modify the retriever so that it first retrieves a larger candidate pool, then filters candidates using cosine similarity to remove near-duplicates. This keeps the final top-k retrieved examples both relevant and diverse. The improvement connects to informed search because retrieval is guided by a similarity heuristic, and it connects to unsupervised learning because the method selects representative patterns from a candidate set. This could improve forecasting because the model receives a broader set of useful historical patterns instead of repeated versions of the same pattern.
