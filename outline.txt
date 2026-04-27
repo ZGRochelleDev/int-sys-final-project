@@ -84,3 +84,11 @@ Outline:
             Prior work in information retrieval (Carbonell & Goldstein, 1998) shows that selecting results based purely on similarity leads to redundancy. This issue is also observed in RAG systems (Lewis et al., 2020), where retrieved context may lack diversity. Recent studies (Izacard & Grave, 2021) demonstrate that diverse retrieval improves downstream model performance.
 
             Therefore, we propose incorporating diversity-aware retrieval into TS-RAG by filtering or re-ranking retrieved time-series segments using a diversity constraint.
+
+
+I was getting the same results.
+First I tested to make sure that MMR is actually changing retrieved indices by printing out and comparing the original indicies to the MMR indicies. If they are identical, MMR is not changing the retrieval set.
+
+
+
+

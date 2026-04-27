@@ -247,6 +247,9 @@ class Retriever():
         boundary_idx_batch = np.digitize(final_indices, self.boundary) - 1
         timestamp_idx_batch = final_indices - np.array(self.boundary)[boundary_idx_batch]
 
+        print("Original indices:", indices[0][:10])
+        print("MMR indices:", final_indices[0][:10])
+
         return final_distances, boundary_idx_batch, timestamp_idx_batch
 
 def do_retrieve(original_data_name, retrieval_database_dir, root_dir, metadata, mode, top_k, context_length, prediction_length, seed, dimension, embedding_model, save=True, embedding_tuning=None):
