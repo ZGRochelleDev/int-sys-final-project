@@ -177,52 +177,77 @@ class Retriever():
 
         return distances, boundary_idx_batch, timestamp_idx_batch
 
-    def search_diverse(self, query_vector, top_k, candidate_multiplier=3, diversity_threshold=0.90):
+    def search_mmr(self, query_vector, top_k, lambda_param=0.7, candidate_multiplier=3):
         if query_vector.ndim == 1:
             query_vector = query_vector.reshape(1, -1)
 
         candidate_k = top_k * candidate_multiplier
         distances, indices = self.index.search(query_vector, candidate_k)
 
-        final_indices = []
         final_distances = []
+        final_indices = []
 
-        for row_distances, row_indices in zip(distances, indices):
-            selected = []
+        for q_idx in range(query_vector.shape[0]):
+            query = query_vector[q_idx]
+
+            candidate_indices = indices[q_idx]
+            candidate_distances = distances[q_idx]
+
+            selected_indices = []
             selected_distances = []
 
-            for dist, idx in zip(row_distances, row_indices):
-                candidate_vector = self.index.reconstruct(int(idx))
+            candidate_vectors = np.array([
+                self.index.reconstruct(int(idx)) for idx in candidate_indices
+            ])
 
-                keep = True
-                for selected_idx in selected:
-                    selected_vector = self.index.reconstruct(int(selected_idx))
+            for _ in range(top_k):
+                best_score = -float("inf")
+                best_pos = None
 
-                    cosine_sim = np.dot(candidate_vector, selected_vector) / (
-                        np.linalg.norm(candidate_vector) * np.linalg.norm(selected_vector)
+                for i, candidate_idx in enumerate(candidate_indices):
+                    if candidate_idx in selected_indices:
+                        continue
+
+                    candidate_vector = candidate_vectors[i]
+
+                    relevance = -candidate_distances[i]
+
+                    if len(selected_indices) == 0:
+                        diversity_penalty = 0
+                    else:
+                        selected_vectors = np.array([
+                            self.index.reconstruct(int(idx)) for idx in selected_indices
+                        ])
+
+                        similarities = np.dot(selected_vectors, candidate_vector) / (
+                            np.linalg.norm(selected_vectors, axis=1) *
+                            np.linalg.norm(candidate_vector) + 1e-8
+                        )
+
+                        diversity_penalty = np.max(similarities)
+
+                    mmr_score = (
+                        lambda_param * relevance
+                        - (1 - lambda_param) * diversity_penalty
                     )
 
-                    if cosine_sim > diversity_threshold:
-                        keep = False
-                        break
+                    if mmr_score > best_score:
+                        best_score = mmr_score
+                        best_pos = i
 
-                if keep:
-                    selected.append(idx)
-                    selected_distances.append(dist)
+                selected_indices.append(candidate_indices[best_pos])
+                selected_distances.append(candidate_distances[best_pos])
 
-                if len(selected) == top_k:
-                    break
-
-            final_indices.append(selected)
+            final_indices.append(selected_indices)
             final_distances.append(selected_distances)
 
-        indices = np.array(final_indices)
-        distances = np.array(final_distances)
+        final_indices = np.array(final_indices)
+        final_distances = np.array(final_distances)
 
-        boundary_idx_batch = np.digitize(indices, self.boundary) - 1
-        timestamp_idx_batch = indices - np.array(self.boundary)[boundary_idx_batch]
+        boundary_idx_batch = np.digitize(final_indices, self.boundary) - 1
+        timestamp_idx_batch = final_indices - np.array(self.boundary)[boundary_idx_batch]
 
-        return distances, boundary_idx_batch, timestamp_idx_batch
+        return final_distances, boundary_idx_batch, timestamp_idx_batch
 
 def do_retrieve(original_data_name, retrieval_database_dir, root_dir, metadata, mode, top_k, context_length, prediction_length, seed, dimension, embedding_model, save=True, embedding_tuning=None):
     '''
@@ -282,9 +307,11 @@ def do_retrieve(original_data_name, retrieval_database_dir, root_dir, metadata, 
 
                     # distances_batch, boundary_idx_batch, timestamp_idx_batch = retriever.search(query_vector_batch, top_k=top_k)
 
-                    distances_batch, boundary_idx_batch, timestamp_idx_batch = retriever.search_diverse(
+                    distances_batch, boundary_idx_batch, timestamp_idx_batch = retriever.search_mmr(
                         query_vector_batch,
-                        top_k=top_k
+                        top_k=top_k,
+                        lambda_param=0.7,
+                        candidate_multiplier=3
                     )
 
                     boundary_idx_matrix[start_idx_batch, var_idx, :] = boundary_idx_batch
