@@ -1,3 +1,4 @@
+
 ## ToDo ##
     1. find/select improvement
     2. implement improvement
@@ -7,7 +8,8 @@
     6. write report
 
 ## Problem Summary ##
-    TS-RAG likely suffers from redundant retrieval
+    TS-RAG can suffer from redundant retrieval
+     - The original method retrieves time-series segments based solely on embedding similarity, which can lead to redundant results that capture the same pattern.
     This is a known problem in:
      - IR (MMR)
      - RAG systems
@@ -15,7 +17,7 @@
     My idea is valid, supported, and publishable-level direction
 
 Project outline:
-    My proposed improvement enhances TS-RAG by introducing an MMR-based retrieval mechanism. The original method retrieves time-series segments based solely on embedding similarity, which can lead to redundant results that capture the same pattern. To overcome this, I modify the retrieval step to first obtain a larger pool of candidate segments and then apply MMR to select a subset that balances relevance and diversity.
+    My proposed improvement enhances TS-RAG by introducing an MMR-based (Maximal Marginal Relevance) retrieval mechanism. The original method retrieves time-series segments based solely on embedding similarity, which can lead to redundant results that capture the same pattern. To overcome this, I plan to modify the retrieval step to first obtain a larger pool of candidate segments and then apply MMR to select a subset that balances relevance and diversity.
 
     This change ensures that the final retrieved set provides broader coverage of useful historical patterns, rather than repeated variations of the same pattern. The idea builds on established concepts from information retrieval and aligns with principles from informed search and unsupervised learning. By incorporating diversity into the retrieval process, the model is provided with richer contextual information, which can improve forecasting performance and robustness.
 
@@ -73,7 +75,20 @@ Outline:
 
                 My improvement directly addresses this weakness.
 
+                Determine a test for redundancy.
+
             Paper 2: Izacard & Grave (2021) — FiD (Fusion-in-Decoder)                           <-- use this
+
+            ## Find a diagram for this paper. ##
+            ## detrmine what this retrieval function is doing
+                - compare "def search" with search_mmr
+                - describe what retrive.py is doing
+            ## at what point in the pipeline does this happen?
+            ## which datasets are used for training?
+            ## which are used for forcasting?
+            ## should I just use/compare 1 dataset or all?  
+
+            ## what features did I extract - proj 4.
 
         Best 3 papers to cite:
             Carbonell & Goldstein (1998) → MMR (core idea)
@@ -87,8 +102,24 @@ Outline:
 
 
 I was getting the same results.
-First I tested to make sure that MMR is actually changing retrieved indices by printing out and comparing the original indicies to the MMR indicies. If they are identical, MMR is not changing the retrieval set.
+
+1. First I tested to make sure that MMR is actually changing retrieved indices by printing out and comparing the original indicies to the MMR indicies. If they are identical, MMR is not changing the retrieval set.
 
 
+2. Next, I atttempted to make the MMR more aggressive by altering the variables:
+    lambda_param = 0.7 -> 0.3
+    candidate_multiplier = 3 -> 10
 
+Lower lambda_param means more diversity, less pure similarity.
+
+3. Then tried a smaller retrieval size, by reducing the top_k variable.
+If top_k=64, MMR may still include many of the same useful candidates.
+MMR has a bigger impact when it must choose a smaller subset.
+    --top_k 32
+    --top_k 16
+    --top_k 8
+
+4. Next I thought about altering the candidate pool. to give MMR more alternatives to choose from. Instead of choosing 64 from 192 candidates, choose 64 from 640.
+    candidate_multiplier=10
+    candidate_multiplier=20
 
