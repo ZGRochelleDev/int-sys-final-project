@@ -177,6 +177,10 @@ class Retriever():
 
         return distances, boundary_idx_batch, timestamp_idx_batch
 
+    ## Source: https://medium.com/@ankitgeotek/mastering-maximal-marginal-relevance-mmr-a-beginners-guide-0f383035a985
+    ## Section: 4. Python Code for MMR
+    ## Zoe Rochelle
+    ## 04/27/2026
     def search_mmr(self, query_vector, top_k, lambda_param=0.7, candidate_multiplier=3):
         if query_vector.ndim == 1:
             query_vector = query_vector.reshape(1, -1)
