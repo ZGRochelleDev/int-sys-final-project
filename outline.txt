@@ -99,27 +99,3 @@ Outline:
             Prior work in information retrieval (Carbonell & Goldstein, 1998) shows that selecting results based purely on similarity leads to redundancy. This issue is also observed in RAG systems (Lewis et al., 2020), where retrieved context may lack diversity. Recent studies (Izacard & Grave, 2021) demonstrate that diverse retrieval improves downstream model performance.
 
             Therefore, we propose incorporating diversity-aware retrieval into TS-RAG by filtering or re-ranking retrieved time-series segments using a diversity constraint.
-
-
-I was getting the same results.
-
-1. First I tested to make sure that MMR is actually changing retrieved indices by printing out and comparing the original indicies to the MMR indicies. If they are identical, MMR is not changing the retrieval set.
-
-
-2. Next, I atttempted to make the MMR more aggressive by altering the variables:
-    lambda_param = 0.7 -> 0.3
-    candidate_multiplier = 3 -> 10
-
-Lower lambda_param means more diversity, less pure similarity.
-
-3. Then tried a smaller retrieval size, by reducing the top_k variable.
-If top_k=64, MMR may still include many of the same useful candidates.
-MMR has a bigger impact when it must choose a smaller subset.
-    --top_k 32
-    --top_k 16
-    --top_k 8
-
-4. Next I thought about altering the candidate pool. to give MMR more alternatives to choose from. Instead of choosing 64 from 192 candidates, choose 64 from 640.
-    candidate_multiplier=10
-    candidate_multiplier=20
-
